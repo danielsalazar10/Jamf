@@ -104,14 +104,19 @@ def get(url,auth,json,method='mobiledevices',head={"Accept": "application/json"}
 #   2) cfg_data is a list of config URL/credentials
 #   3) auth is a list of authenticated requests
 # Process:
-#   This uses the api to determine which data to get, passing in the necessary
-#   variables.
+#   This goes down the list making API calls to the respective servers and putting them in a list
 # Output:
-#   returns either a JSON or XML decoded list
-def getAPIData(api, cfg_data, auth):
-    return {
-        1: get(cfg_data[0]["credentials"]['url'],auth[0],True),
-        2: get(cfg_data[1]["credentials"]['url'],auth[1],True),
-        3: get(cfg_data[2]["credentials"]['url'],auth[2],True),
-        4: get(cfg_data[3]["credentials"]['url'],auth[3],False)
-    }[api]
+#   returns a list, containing either JSON or XML decoded data
+def getAPIData():
+    all_api_data = []
+    cfg_data = getConfigData()
+    auth = getAuth()
+    # Jamf: JSS REST API
+    all_api_data.append(get(cfg_data[0]["credentials"]['url'],auth[0],True))
+    # MSCCM: System Center Orchestrator OData REST API
+    all_api_data.append(get(cfg_data[1]["credentials"]['url'],auth[1],True))
+    # ServiceNow: Scripted REST API
+    all_api_data.append(get(cfg_data[2]["credentials"]['url'],auth[2],True))
+    # BigFix: BigFix REST API
+    all_api_data.append(get(cfg_data[3]["credentials"]['url'],auth[3],False))
+    return all_api_data
