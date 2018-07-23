@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jul 19 17:19:59 2018
-@author: vu7972
-Inspired by sreyemnayr JSSAPI:
-https://github.com/sreyemnayr/jamf_pro_api/blob/master/jssapi/jssapi.py
+Created on Thu Jul 23 17:19:59 2018
+@author: Daniel
 """
 import requests
 import sys
@@ -117,4 +115,3 @@ def getAPIData(api, cfg_data, auth):
         3: get(cfg_data[2]["credentials"]['url'],auth[2],True),
         4: get(cfg_data[3]["credentials"]['url'],auth[3],False)
     }[api]
-
