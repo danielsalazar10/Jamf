@@ -1,3 +1,16 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jul 19 17:19:59 2018
+@author: vu7972
+Inspired by sreyemnayr JSSAPI:
+https://github.com/sreyemnayr/jamf_pro_api/blob/master/jssapi/jssapi.py
+"""
+import requests
+import sys
+import json
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
 from enum import Enum
 class API(Enum):
     # Jamf: JSS REST API
@@ -30,7 +43,7 @@ def readConfig(cfg_file):
 # Process:
 #   Switch on a number, returning a cfg_filename
 # Output:
-#   returns cfg_file for use in
+#   cfg_file is a string representing the config file of the respective api
 def getConfigFile(api):
     return {
         1: '../JSScredentials.json',
@@ -45,26 +58,63 @@ def getConfigFile(api):
 #   Those filenames are passed into readConfig() to get the data as a list.
 #   Those lists are appended to config and returned.
 # Output:
-#   A list of cfg_data for use in setAuth()
+#   cfg_data is a list of URL/credentials
 def getConfigData():
-    # Read configuration files for each API
     cfg_data = []
     for api in API:
         cfg_data.append(readConfig(getConfigFile(api.value)))
     return cfg_data
 
-# Input:
-#   1) cfg_data is a list of cfg_data
 # Process:
-#   This will loop through each of the cfg_data.
+#   This will loop through each of the cfg_data in order of the Enum.
 #   It will extract the username and password from the cfg_data and use that to request authentication.
 # Output:
-#   1) auth is a list of authentications, for use as an argument for requests.get()
-def setAuth(cfg_data):
+#   auth is a list of authentications
+def getAuth(cfg_data):
     auth = []
     for data in cfg_data:
         try:
             auth.append(requests.auth.HTTPBasicAuth(data["credentials"]["username"],data["credentials"]["password"]))
         except:
-            e = sys.exc_info[0]
+            sys.exc_info()[0]
     return auth
+
+# Input:
+#   1) url is the base URL for the API
+#   2) auth is the specific authentication data for the API
+#   3) json is a switch for determining which to decode the data as
+#   4) method is for the API call
+#   5) head is for the API call
+# Process:
+#   This tries to get the API data and either decodes it as JSON or XML
+# Output:
+#   returns decoded JSON data
+def get(url,auth,json,method='mobiledevices',head={"Accept": "application/json"}):
+    try:
+        r = requests.get(url=(url + method), heading=head, auth=auth)
+        if r.status_code != 200:
+            r.raise_for_status()
+        if json:
+            return r.json()
+        else:
+            return r.text()
+    except:
+        sys.exc_info()[0]
+
+# Input:
+#   1) api represents which API to get data for
+#   2) cfg_data is a list of config URL/credentials
+#   3) auth is a list of authenticated requests
+# Process:
+#   This uses the api to determine which data to get, passing in the necessary
+#   variables.
+# Output:
+#   returns either a JSON or XML decoded list
+def getAPIData(api, cfg_data, auth):
+    return {
+        1: get(cfg_data[0]["credentials"]['url'],auth[0],True),
+        2: get(cfg_data[1]["credentials"]['url'],auth[1],True),
+        3: get(cfg_data[2]["credentials"]['url'],auth[2],True),
+        4: get(cfg_data[3]["credentials"]['url'],auth[3],False)
+    }[api]
+
