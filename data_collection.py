@@ -5,7 +5,6 @@ Created on Thu Jul 23 17:19:59 2018
 """
 import requests
 import sys
-import json
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -61,7 +60,8 @@ def getAuth(cfg_data):
 #   4) method is for the API call
 #   5) head is for the API call
 # Process:
-#   This tries to get the API data and either decodes it as JSON or XML
+#   This tries to get the API data and either decodes it as JSON or XML.
+#   If it fails, it will halt the script and print out the reason why.
 # Output:
 #   returns decoded JSON data
 def get(url,auth,method='mobiledevices',head={"Accept": "application/json"}):
@@ -73,15 +73,16 @@ def get(url,auth,method='mobiledevices',head={"Accept": "application/json"}):
     except:
         sys.exc_info()[0]
         
-# Testing with Oxford Dictionary
-def getTest(url,head={"Accept": "application/json"}):
-    return requests.get(url, headers = head)
-cfg_data = getConfigData(API(4))
-auth = getAuth(cfg_data)
-url = 'https://od-api.oxforddictionaries.com:443/api/v1/inflections/en/Changes'
-user = cfg_data["credentials"]["username"]
-pwd = cfg_data["credentials"]["password"]
-r = getTest(url, {'app_id': user, 'app_key': pwd})
-print("code {}\n".format(r.status_code))
-print("text \n" + r.text)
-print("json \n" + json.dumps(r.json()))
+# Input:
+#   1) api is one of the API Enums
+#   2) method is what goes after the url, example: '/computerapplicationusage/id/%s/%s_%s'
+# Process
+#   This gets the configuration data
+#   Then it authorizes using the username and password
+#   Finally it gets the API response using a GET request
+# Output:
+#   response is the text version of the API call;JSON/XML data
+def getResponse(api, method):
+    cfg_data = getConfigData(api)
+    auth = getAuth(cfg_data)
+    return get(cfg_data["credentials"]["url"], auth, method)
